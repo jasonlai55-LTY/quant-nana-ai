@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import ReactDOM from 'react-dom/client';
 import { 
   Activity, AlertTriangle, TrendingUp, DollarSign, Clock, Globe, 
   Search, Newspaper, LineChart, Info, Star, Plus, X, 
   ExternalLink, FileText, Sparkles, Loader2, ShieldAlert, Zap, Target, Key, BarChart3
 } from 'lucide-react';
 
-// --- 工具組件：專業級提示框 ---
+// --- 工具組件：專業級美化提示框 ---
 const Tooltip = ({ children, text }) => (
   <div className="group relative flex items-center cursor-help z-50">
     {children}
@@ -16,23 +17,22 @@ const Tooltip = ({ children, text }) => (
   </div>
 );
 
-// --- V8.0 專業級四層 Pane 圖表引擎 (完全復刻截圖風格) ---
+// --- V8.0 專業級四層 Pane 圖表引擎 (復刻截圖風格) ---
 const V8ProChart = ({ stockTicker, isReal, activeIndicator }) => {
   const hash = useMemo(() => stockTicker ? stockTicker.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) : 0, [stockTicker]);
   
   return (
     <div className="flex-1 w-full flex flex-col space-y-2 p-1 bg-[#0b0e14] rounded-2xl border border-slate-800 shadow-2xl overflow-hidden">
       {/* 1. 主圖層 (55% 高度): 陰陽燭 + 布林通道 + MA20 + 買賣訊號 */}
-      <div className="relative flex-[11] border-b border-slate-800/50 group">
+      <div className="relative flex-[11] border-b border-slate-800/50">
         <div className="absolute top-2 left-2 z-20 flex space-x-2">
           <span className="bg-slate-900/80 border border-slate-700 px-2 py-0.5 rounded text-[8px] font-black text-white uppercase shadow-lg backdrop-blur">MA20 (Bollinger)</span>
           <span className="bg-purple-900/20 px-2 py-0.5 rounded text-[8px] font-bold text-purple-400 border border-purple-500/20">K線</span>
         </div>
         <svg className="w-full h-full p-4 relative z-10" preserveAspectRatio="none" viewBox="0 0 100 100">
-          {/* 背景網格 */}
           {[20, 40, 60, 80].map(v => <line key={v} x1="0" y1={v} x2="100" y2={v} stroke="#1e293b" strokeWidth="0.1" />)}
           
-          {/* 布林通道陰影色塊 (V8.0 標誌視覺) */}
+          {/* 布林通道陰影色塊 */}
           <path d="M0,60 Q25,45 50,55 T100,20 L100,45 Q75,80 50,65 T0,85 Z" fill="#3b82f6" fillOpacity="0.12" />
           <path d="M0,60 Q25,45 50,55 T100,20" fill="none" stroke="#3b82f6" strokeWidth="0.3" opacity="0.4" strokeDasharray="2,1" />
           <path d="M0,85 Q50,65 75,80 T100,45" fill="none" stroke="#3b82f6" strokeWidth="0.3" opacity="0.4" strokeDasharray="2,1" />
@@ -50,7 +50,7 @@ const V8ProChart = ({ stockTicker, isReal, activeIndicator }) => {
               <g key={i}>
                 <line x1={x + 1} y1={yBase - 6} x2={x + 1} y2={yBase + bodyH + 6} stroke={isUp ? '#ef4444' : '#22c55e'} strokeWidth="0.5" />
                 <rect x={x} y={yBase} width="2.2" height={bodyH} fill={isUp ? '#ef4444' : '#22c55e'} rx="0.2" />
-                {/* V8.0 買賣訊號點模擬 */}
+                {/* 買賣訊號點模擬 (黃/白三角形) */}
                 {i === 7 && <path d={`M${x},${yBase+bodyH+12} L${x+2},${yBase+bodyH+12} L${x+1},${yBase+bodyH+7} Z`} fill="#f59e0b" />}
                 {i === 18 && <path d={`M${x},${yBase-12} L${x+2},${yBase-12} L${x+1},${yBase-7} Z`} fill="#ffffff" />}
               </g>
@@ -133,7 +133,7 @@ const App = () => {
   };
 
   const callGeminiEngine = async (prompt) => {
-    if (!userApiKey) return "尚未檢測到 API Key。請在右上角輸入您的 Google Gemini API Key 以啟動分析報告。";
+    if (!userApiKey) return "尚未填寫 API Key。請在右上角欄位填入您的 Google Gemini API Key 以啟動 AI 分析。";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${userApiKey}`;
     try {
       const res = await fetch(url, { 
@@ -146,7 +146,7 @@ const App = () => {
       });
       const data = await res.json();
       return data.candidates?.[0]?.content?.parts?.[0]?.text || "分析生成失敗，請檢查 Key 是否有效。";
-    } catch { return "API 連線失敗，請檢查網路。"; }
+    } catch { return "API 連線失敗，請檢查網路狀態。"; }
   };
 
   useEffect(() => {
@@ -164,7 +164,7 @@ const App = () => {
           setAppData({
             macro: { ...mData, news: [
                 { source: 'Reuters', text: `$${currentStock} 雲端引擎同步成功。點擊閱讀全文報導。`, url: 'https://reuters.com' },
-                { source: 'Bloomberg', text: `機構分析師上調 $${currentStock} 未來一年營收展望，看好毛利成長。`, url: 'https://bloomberg.com' }
+                { source: 'CNBC', text: `機構分析師上調 $${currentStock} 未來一年收盤獲利展望。`, url: 'https://cnbc.com' }
             ]},
             stock: sData.stock,
             tech: sData.tech,
@@ -174,19 +174,18 @@ const App = () => {
         }
       } catch {
         if (isMounted) {
-          // 當後端休眠時，顯示符合您要求的「校正版」模擬數值
           setAppData({
             macro: { 
               sp500: {val: 6012.4, chg: 0.45}, 
-              taiex: {val: 31256.8, chg: 1.25}, 
-              usdtwd: {val: 31.852, chg: -0.05},
-              news: [{ source: '系統', text: 'Render 後端引擎正在喚醒中（約30秒），目前顯示校正模擬數據。', url: '#' }] 
+              taiex: {val: 23156.8, chg: 1.25}, 
+              usdtwd: {val: 32.125, chg: -0.05},
+              news: [{ source: '系統', text: 'Render 後端正在喚醒（首次啟動需30秒），目前顯示校正後數據。', url: '#' }] 
             },
             stock: { price: currentStock === '2330' ? 1045 : 240, change: 1.45, pe: 16.5, roe: 22.4, analystTarget: currentStock === '2330' ? 1200 : 280 },
             tech: { kd: {k:24, d:30}, rsi: 45, macd: "同步中", marginRate: 160, chipData: {isTWSE: /^\d+$/.test(currentStock)} },
             isReal: false
           });
-          setTimeout(fetchData, 8000); 
+          setTimeout(fetchData, 10000); 
           setIsLoading(false);
         }
       }
@@ -200,7 +199,7 @@ const App = () => {
       <Activity className="w-20 h-20 mb-6 animate-bounce" />
       <h2 className="text-3xl font-black uppercase text-white tracking-[0.3em] mb-2">Quant Nana Pro</h2>
       <div className="flex items-center text-sm text-slate-500">
-        <Loader2 className="w-5 h-5 mr-3 animate-spin text-blue-500" /> 同步交易所即時數據並載入 V8.0 繪圖引擎...
+        <Loader2 className="w-5 h-5 mr-3 animate-spin text-blue-500" /> 同步交易所數據並啟動 V8.0 引擎...
       </div>
     </div>
   );
@@ -212,10 +211,10 @@ const App = () => {
         <div className="flex items-center space-x-4">
           <Activity className="text-blue-500 w-8 h-8" />
           <h1 className="text-2xl font-black text-white hidden sm:block">QUANT<span className="text-blue-500">NANA</span></h1>
-          <div className="hidden xl:flex bg-slate-800/60 px-3 py-1.5 rounded-2xl border border-slate-700 items-center space-x-2 ml-4">
+          <div className="hidden xl:flex bg-slate-800/60 px-3 py-1.5 rounded-2xl border border-slate-700 items-center space-x-2 ml-4 group hover:border-purple-500 transition-all">
              <Key className="w-3 h-3 text-purple-400" />
-             <input type="password" value={userApiKey} onChange={(e)=>setUserApiKey(e.target.value)} placeholder="填入 Gemini API Key" className="bg-transparent text-[10px] w-36 focus:outline-none" />
-             <Tooltip text="Key 僅存於瀏覽器，用於觸發模組四的 AI 深度策略推演報告。">
+             <input type="password" value={userApiKey} onChange={(e)=>setUserApiKey(e.target.value)} placeholder="填入 Gemini API Key" className="bg-transparent text-[10px] w-36 focus:outline-none text-white" />
+             <Tooltip text="此 Key 僅用於本地 AI 運算，確保策略報告生成的穩定性。">
                 <Info className="w-3 h-3 text-slate-500" />
              </Tooltip>
           </div>
@@ -224,7 +223,7 @@ const App = () => {
         <form onSubmit={handleSearch} className="flex-1 max-w-xl relative flex items-center space-x-2 mx-6">
            <div className="relative flex-1">
              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-             <input type="text" value={tickerInput} onChange={(e)=>setTickerInput(e.target.value)} placeholder="搜尋代碼 (例: 2330, TSLA)..." className="w-full bg-slate-950 border border-slate-700 rounded-2xl pl-10 pr-4 py-2 text-sm focus:border-blue-500 transition-all uppercase outline-none" />
+             <input type="text" value={tickerInput} onChange={(e)=>setTickerInput(e.target.value)} placeholder="搜尋代碼 (2330, NVDA)..." className="w-full bg-slate-950 border border-slate-700 rounded-2xl pl-10 pr-4 py-2 text-sm focus:border-blue-500 transition-all uppercase outline-none" />
            </div>
            <button type="button" onClick={()=>toggleWatchlist(currentStock)} className={`p-2 rounded-2xl border transition-all ${watchlists[market].includes(currentStock) ? 'bg-yellow-500/20 border-yellow-500/50 text-yellow-400 shadow-lg' : 'bg-slate-800 border-slate-700 text-slate-500'}`}>
              <Star className={`w-5 h-5 ${watchlists[market].includes(currentStock) ? 'fill-current' : ''}`} />
@@ -232,7 +231,7 @@ const App = () => {
         </form>
 
         <div className="flex items-center space-x-4">
-          {appData.isReal ? <span className="bg-green-500/10 text-green-400 text-[10px] px-3 py-1 rounded-full border border-green-500/20 flex items-center shadow-lg"><div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-2 animate-pulse"></div> 雲端同步中</span> : <span className="bg-orange-500/10 text-orange-400 text-[10px] px-3 py-1 rounded-full border border-orange-500/20 animate-pulse">大腦喚醒中</span>}
+          {appData.isReal ? <span className="bg-green-500/10 text-green-400 text-[10px] px-3 py-1 rounded-full border border-green-500/20 flex items-center shadow-lg"><div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-2 animate-pulse"></div> 雲端同步中</span> : <span className="bg-orange-500/10 text-orange-400 text-[10px] px-3 py-1 rounded-full border border-orange-500/20 animate-pulse">引擎喚醒中</span>}
           <div className="flex bg-slate-800 p-1 rounded-xl shadow-inner border border-slate-700">
              <button onClick={()=>{setMarket('US'); setCurrentStock('AAPL');}} className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${market==='US' ? 'bg-blue-600 text-white' : 'text-slate-500'}`}>US</button>
              <button onClick={()=>{setMarket('TW'); setCurrentStock('2330');}} className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${market==='TW' ? 'bg-blue-600 text-white' : 'text-slate-500'}`}>TW</button>
@@ -240,13 +239,12 @@ const App = () => {
         </div>
       </header>
 
-      {/* ================= 主介面區 ================= */}
+      {/* ================= 主內容區 ================= */}
       <main className="max-w-[1850px] mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 w-full flex-1">
         
-        {/* 左側自選 (My Radar) */}
         <aside className="hidden lg:block lg:col-span-2 space-y-4">
            <h2 className="text-slate-500 font-bold text-[10px] uppercase tracking-widest flex items-center mb-4"><Star className="w-3 h-3 mr-2"/> My Radar</h2>
-           <div className="space-y-1.5 overflow-y-auto max-h-[75vh] custom-scrollbar">
+           <div className="space-y-1.5 overflow-y-auto max-h-[75vh] custom-scrollbar pr-1">
              {watchlists[market].map(t => (
                <button key={t} onClick={()=>setCurrentStock(t)} className={`w-full p-4 rounded-3xl border transition-all text-sm font-mono flex justify-between items-center group ${currentStock===t ? 'bg-blue-900/30 border-blue-500 text-white shadow-xl scale-105' : 'border-transparent text-slate-500 hover:bg-slate-900'}`}>
                  {t} {currentStock===t && <Activity className="w-3 h-3 text-blue-400 animate-pulse" />}
@@ -256,23 +254,26 @@ const App = () => {
         </aside>
 
         <div className="lg:col-span-10 grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
           <div className="lg:col-span-4 space-y-6">
-            {/* 模組一：總經 (校正版數據) */}
+            {/* 模組一 */}
             <div className="bg-[#11141c] p-6 rounded-[2.5rem] border border-slate-800 shadow-2xl">
                <h3 className="text-white font-bold mb-6 flex items-center text-sm uppercase tracking-widest"><Globe className="w-4 h-4 mr-3 text-purple-400"/> 模組一：總經與市場情緒</h3>
-               <div className="grid grid-cols-3 gap-2 mb-6">
-                  {[
-                    {label: 'INX (S&P 500)', data: appData.macro.sp500},
-                    {label: 'TWSE (加權)', data: appData.macro.taiex},
-                    {label: 'USD/TWD', data: appData.macro.usdtwd}
-                  ].map(idx => (
-                    <div key={idx.label} className="bg-slate-950 p-2.5 rounded-2xl border border-slate-800 text-center shadow-inner group hover:border-slate-600 transition-all">
-                      <span className="text-[7px] text-slate-500 block mb-1 uppercase font-black tracking-tighter">{idx.label}</span>
-                      <span className="text-[11px] font-black block text-white font-mono">{idx.data.val}</span>
-                      <span className={`text-[8px] font-bold ${idx.data.chg >= 0 ? 'text-red-400' : 'text-green-400'}`}>{idx.data.chg > 0 ? '+' : ''}{idx.data.chg}%</span>
-                    </div>
-                  ))}
+               <div className="grid grid-cols-3 gap-2 mb-6 text-center">
+                  <div className="bg-slate-950 p-2.5 rounded-2xl border border-slate-800 shadow-inner">
+                    <span className="text-[7px] text-slate-500 block mb-1 uppercase font-black">INX (S&P 500)</span>
+                    <span className="text-[11px] font-black block text-white font-mono">{appData.macro.sp500.val}</span>
+                    <span className={`text-[8px] font-bold ${appData.macro.sp500.chg >= 0 ? 'text-red-400' : 'text-green-400'}`}>{appData.macro.sp500.chg > 0 ? '+' : ''}{appData.macro.sp500.chg}%</span>
+                  </div>
+                  <div className="bg-slate-950 p-2.5 rounded-2xl border border-slate-800 shadow-inner">
+                    <span className="text-[7px] text-slate-500 block mb-1 uppercase font-black">TWSE (加權)</span>
+                    <span className="text-[11px] font-black block text-white font-mono">{appData.macro.taiex.val}</span>
+                    <span className={`text-[8px] font-bold ${appData.macro.taiex.chg >= 0 ? 'text-red-400' : 'text-green-400'}`}>{appData.macro.taiex.chg > 0 ? '+' : ''}{appData.macro.taiex.chg}%</span>
+                  </div>
+                  <div className="bg-slate-950 p-2.5 rounded-2xl border border-slate-800 shadow-inner">
+                    <span className="text-[7px] text-slate-500 block mb-1 uppercase font-black">USD/TWD</span>
+                    <span className="text-[11px] font-black block text-white font-mono">{appData.macro.usdtwd.val}</span>
+                    <span className={`text-[8px] font-bold ${appData.macro.usdtwd.chg >= 0 ? 'text-red-400' : 'text-green-400'}`}>{appData.macro.usdtwd.chg > 0 ? '+' : ''}{appData.macro.usdtwd.chg}%</span>
+                  </div>
                </div>
                <div className="space-y-3">
                   <span className="text-purple-400 font-black text-[10px] flex items-center uppercase tracking-widest mb-2"><Newspaper className="w-3.5 h-3.5 mr-2"/> NLP Real-time Feed</span>
@@ -285,7 +286,7 @@ const App = () => {
                </div>
             </div>
 
-            {/* 模組二：價值分析 */}
+            {/* 模組二 */}
             <div className="bg-[#11141c] p-6 rounded-[2.5rem] border border-slate-800 shadow-2xl space-y-5">
                <h3 className="text-white font-bold flex items-center text-sm uppercase tracking-widest"><ShieldAlert className="w-4 h-4 mr-3 text-emerald-400"/> 模組二：價值與護城河</h3>
                <div className="grid grid-cols-2 gap-4">
@@ -308,7 +309,7 @@ const App = () => {
             </div>
           </div>
 
-          {/* 右欄：V8.0 專業圖表與戰略 (核心復原) */}
+          {/* 右欄 */}
           <div className="lg:col-span-8 space-y-6">
             <div className="bg-[#11141c] p-6 rounded-[2.5rem] border border-slate-800 shadow-2xl flex flex-col min-h-[650px]">
                <div className="flex justify-between items-end mb-6 border-b border-slate-800 pb-5">
@@ -316,7 +317,7 @@ const App = () => {
                     <h3 className="text-white font-bold text-lg flex items-center mb-1.5 tracking-tighter"><LineChart className="w-5 h-5 mr-3 text-cyan-400"/> 模組三：技術與籌碼共振 (V8.0 Pro)</h3>
                     <div className="flex space-x-2">
                        <span className="text-[9px] bg-slate-800 text-slate-400 px-3 py-1 rounded-full uppercase font-black border border-slate-700 tracking-widest">{currentStock}</span>
-                       <span className="text-[9px] bg-blue-900/30 text-blue-400 px-3 py-1 rounded-full uppercase font-black animate-pulse border border-blue-500/20 shadow-blue-500/10">Precision Sync v2.5</span>
+                       <span className="text-[9px] bg-blue-900/30 text-blue-400 px-3 py-1 rounded-full uppercase font-black animate-pulse border border-blue-500/20">Precision Sync Engine</span>
                     </div>
                   </div>
                   <div className="text-right">
@@ -328,7 +329,6 @@ const App = () => {
                   </div>
                </div>
 
-               {/* V8.0 專業多層圖表調用 */}
                <V8ProChart isReal={appData.isReal} stockTicker={currentStock} activeIndicator={activeIndicator} />
 
                <div className="grid grid-cols-4 gap-4 mt-6">
@@ -338,32 +338,30 @@ const App = () => {
                </div>
             </div>
 
-            {/* 模組四：AI 量化戰略全體 */}
             <div className="bg-[#11141c] p-6 rounded-[2.5rem] border border-slate-800 shadow-2xl">
                <h3 className="text-white font-bold mb-6 flex items-center text-sm uppercase tracking-widest"><Zap className="w-5 h-5 mr-3 text-yellow-500"/> 模組四：AI 量化戰術圖卡</h3>
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {[
-                    {id:'val', title:'價值建倉', color:'emerald', icon:<DollarSign className="w-4 h-4 mr-2"/>, text:'基本面護城河分析，適合分批佈局核心部位...'},
-                    {id:'trend', title:'波段作多', color:'purple', icon:<TrendingUp className="w-4 h-4 mr-2"/>, text:'指標底部分離修正，右側量能爆發進場點...'},
-                    {id:'dca', title:'定期定額', color:'blue', icon:<Clock className="w-4 h-4 mr-2"/>, text:'產業成長週期判定，適合微笑曲線規律扣款...'}
+                    {id:'val', title:'價值建倉', color:'emerald', icon:<DollarSign className="w-4 h-4 mr-2"/>, text:'基本面護城河分析...'},
+                    {id:'trend', title:'波段作多', color:'purple', icon:<TrendingUp className="w-4 h-4 mr-2"/>, text:'KD指標底部分離修正...'},
+                    {id:'dca', title:'定期定額', color:'blue', icon:<Clock className="w-4 h-4 mr-2"/>, text:'微笑曲線扣款評估...'}
                   ].map(card => (
                     <div key={card.id} onClick={async()=>{
                         setIsDeepDiving(true);
                         setSelectedStrategy({title: card.title, color: card.color});
-                        const res = await callGeminiEngine(`分析股票 ${currentStock} 的 ${card.title} 潛力。當前價: ${appData.stock.price}, PE: ${appData.stock.pe}, ROE: ${appData.stock.roe}。`);
+                        const res = await callGeminiEngine(`分析股票 ${currentStock} 的 ${card.title} 潛力。當前價: ${appData.stock.price}, PE: ${appData.stock.pe}。`);
                         setAiResult(res);
                         setIsDeepDiving(false);
                       }} className={`bg-slate-950 p-6 rounded-[2rem] border border-${card.color}-500/20 hover:border-${card.color}-500/60 cursor-pointer transition-all group relative overflow-hidden shadow-lg`}>
-                      <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity"><Plus className={`w-5 h-5 text-${card.color}-500`}/></div>
                       <h4 className={`text-${card.color}-400 font-black text-[11px] uppercase mb-3 flex items-center tracking-widest`}>{card.icon} {card.title}</h4>
                       <p className="text-[10px] text-slate-500 leading-relaxed font-medium">{card.text}</p>
                     </div>
                   ))}
-                  <div onClick={()=>setSelectedStrategy({title: '當沖交易警告', details: 'VIX 波動率偏高且 NLP 呈現極端情緒。量化期望值為負。紀律：收盤前 15 分鐘必須絕對平倉，禁止留倉。', color: 'red'})} className="md:col-span-2 lg:col-span-3 bg-red-950/20 border border-red-900/40 p-5 rounded-[2.5rem] flex items-center hover:bg-red-900/30 transition-all cursor-pointer group shadow-xl">
+                  <div onClick={()=>setSelectedStrategy({title: '當沖交易警告', details: 'VIX 波動率偏高。目前凱利公式試算期望值為負。戰術要求：收盤前 15 分鐘必須絕對平倉。', color: 'red'})} className="md:col-span-2 lg:col-span-3 bg-red-950/20 border border-red-900/40 p-5 rounded-[2.5rem] flex items-center hover:bg-red-900/30 transition-all cursor-pointer group shadow-xl">
                      <AlertTriangle className="w-10 h-10 text-red-500 mr-5 group-hover:scale-110 transition-all" />
                      <div className="flex-1">
-                        <h4 className="text-red-400 font-black text-xs uppercase mb-1 flex items-center tracking-widest">當沖/短線極高風險警告 <ShieldAlert className="w-3.5 h-3.5 ml-2 animate-pulse"/></h4>
-                        <p className="text-[10px] text-red-300/70 font-medium">日內趨勢與大盤背離。期望值為負。戰術要求：<span className="text-red-400 underline font-black">收盤絕對不留倉。</span></p>
+                        <h4 className="text-red-400 font-black text-xs uppercase mb-1 flex items-center tracking-widest">當沖/短線極高風險警告</h4>
+                        <p className="text-[10px] text-red-300/70 font-medium"><span className="text-red-400 underline font-black">收盤絕對不留倉。</span></p>
                      </div>
                   </div>
                </div>
@@ -372,7 +370,7 @@ const App = () => {
         </div>
       </main>
 
-      {/* AI推演彈窗 (修復連線邏輯) */}
+      {/* AI推演彈窗 */}
       {selectedStrategy && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/90 backdrop-blur-2xl" onClick={()=>setSelectedStrategy(null)}></div>
@@ -388,21 +386,16 @@ const App = () => {
                  <div className="whitespace-pre-line bg-slate-950 p-6 rounded-3xl border border-slate-800 shadow-inner font-medium shadow-lg leading-relaxed">{aiResult || selectedStrategy.details}</div>
                )}
             </div>
-            <div className="p-6 border-t border-slate-800 flex justify-end bg-slate-800/10">
-               <button onClick={()=>setSelectedStrategy(null)} className="px-8 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-xs font-black transition-all shadow-xl shadow-blue-900/30 tracking-widest">確認報告</button>
-            </div>
           </div>
         </div>
       )}
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-        .shadow-3xl { box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.8); }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-      `}} />
+      <style dangerouslySetInnerHTML={{ __html: `.custom-scrollbar::-webkit-scrollbar { width: 4px; } .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; } .shadow-3xl { box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.8); }` }} />
     </div>
   );
 };
+
+// --- 正式掛載指令 (修復畫面空白的關鍵) ---
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
 
 export default App;
