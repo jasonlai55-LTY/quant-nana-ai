@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { createRoot } from 'react-dom/client';
+import ReactDOM from 'react-dom/client';
 import { 
   Activity, AlertTriangle, TrendingUp, DollarSign, Clock, Globe, 
   Search, Newspaper, LineChart, Info, Star, Plus, Menu, X, 
@@ -33,10 +33,9 @@ const ProfessionalChart = ({ data, activeIndicator, stockTicker }) => {
 
       {/* SVG 繪圖區 */}
       <svg className="w-full h-full p-6 relative z-10" preserveAspectRatio="none" viewBox="0 0 100 100">
-        {/* 即時價格標籤 */}
         <line x1="0" y1="42" x2="100" y2="42" stroke="#3b82f6" strokeWidth="0.3" strokeDasharray="4,4" className="animate-pulse" />
         
-        {/* MA 均線模擬 (專業平滑路徑) */}
+        {/* MA 均線模擬 */}
         <path d="M0,80 Q25,75 45,78 T100,35" fill="none" stroke="#a855f7" strokeWidth="0.8" opacity="0.7" />
         <path d="M0,90 Q20,65 40,82 T100,25" fill="none" stroke="#22d3ee" strokeWidth="0.8" opacity="0.7" />
 
@@ -46,19 +45,16 @@ const ProfessionalChart = ({ data, activeIndicator, stockTicker }) => {
           const x = 5 + i * 4.3;
           const yBase = 25 + ((i * hash) % 45);
           const bodyHeight = 6 + (Math.abs(hash - i) % 18);
-          const wickHeight = bodyHeight + 8;
           return (
             <g key={i} className="hover:opacity-60 transition-opacity cursor-crosshair">
-              {/* 影線 (Wick) */}
               <line x1={x + 1} y1={yBase - 4} x2={x + 1} y2={yBase + bodyHeight + 4} stroke={isUp ? '#ef4444' : '#22c55e'} strokeWidth="0.5" />
-              {/* 實體 (Body) */}
               <rect x={x} y={yBase} width="2.2" height={bodyHeight} fill={isUp ? '#ef4444' : '#22c55e'} rx="0.3" />
             </g>
           );
         })}
       </svg>
       
-      {/* 右下角技術指標數值顯示區 */}
+      {/* 右下角指標數值 */}
       <div className="absolute bottom-4 right-4 flex space-x-2">
          <div className="bg-slate-900/90 backdrop-blur-md border border-slate-700 px-3 py-1.5 rounded-xl text-[10px] font-mono shadow-2xl">
             <span className="text-slate-500 uppercase mr-2">{activeIndicator}:</span>
@@ -170,7 +166,6 @@ const App = () => {
           setIsLoading(false);
         }
       } catch (error) {
-        // 喚醒模式：絕不顯示假股價，寧可顯示連動中
         const isTW = /^\d+$/.test(currentStock);
         if (isMounted) {
           setAppData({
@@ -194,7 +189,7 @@ const App = () => {
   if (isLoading || !appData) return (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-blue-400 font-mono">
       <Activity className="w-16 h-16 mb-4 animate-bounce" />
-      <h2 className="text-2xl font-black tracking-widest uppercase">Quant Nana AI</h2>
+      <h2 className="text-2xl font-black tracking-widest uppercase text-white">Quant Nana AI</h2>
       <div className="text-sm text-slate-500 mt-4 flex items-center">
         <Loader2 className="w-4 h-4 mr-2 animate-spin" /> 正在抓取 {currentStock} 即時精確市場數據...
       </div>
@@ -203,7 +198,7 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-300 font-sans selection:bg-blue-500/30 overflow-x-hidden flex flex-col">
-      {/* ================= 頂部導覽列 ================= */}
+      {/* 頂部導覽 */}
       <header className="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-50 shadow-2xl backdrop-blur-md bg-opacity-90">
         <div className="max-w-[1700px] mx-auto flex justify-between items-center gap-6">
           <div className="flex items-center space-x-3">
@@ -239,10 +234,8 @@ const App = () => {
         </div>
       </header>
 
-      {/* ================= 主內容區 ================= */}
+      {/* 主內容 */}
       <main className="max-w-[1700px] mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 w-full flex-1">
-        
-        {/* 左側自選看板 */}
         <aside className="hidden lg:block lg:col-span-2 space-y-2">
            <h2 className="text-white font-black text-[10px] mb-5 flex items-center uppercase tracking-widest opacity-50"><Star className="w-3 h-3 mr-2 text-yellow-400 fill-current"/> My Watchlist</h2>
            <div className="space-y-1.5">
@@ -255,13 +248,9 @@ const App = () => {
            </div>
         </aside>
 
-        {/* 核心內容區域 */}
         <div className="lg:col-span-10 grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
           {/* 左欄：模組一、二 */}
           <div className="lg:col-span-4 space-y-6">
-            
-            {/* 模組一：總經與 NLP */}
             <div className="bg-slate-900 p-6 rounded-[2.5rem] border border-slate-800 shadow-2xl">
                <h3 className="text-white font-bold mb-6 flex items-center text-sm uppercase tracking-wider"><Globe className="w-4 h-4 mr-3 text-purple-400"/> 模組一：總經與 NLP 情緒</h3>
                <div className="grid grid-cols-3 gap-2 mb-6 text-center">
@@ -285,7 +274,6 @@ const App = () => {
                </div>
             </div>
 
-            {/* 模組二：價值護城河 (含分析師目標價) */}
             <div className="bg-slate-900 p-6 rounded-[2.5rem] border border-slate-800 shadow-2xl">
                <h3 className="text-white font-bold mb-6 flex items-center text-sm uppercase tracking-wider"><ShieldAlert className="w-4 h-4 mr-3 text-emerald-400"/> 模組二：價值護城河</h3>
                <div className="grid grid-cols-2 gap-4 mb-5">
@@ -298,23 +286,18 @@ const App = () => {
                     <span className={`text-3xl font-mono font-black ${appData.stock.roe > 15 && appData.isReal ? 'text-emerald-400' : 'text-white'}`}>{appData.stock.roe || '---'}%</span>
                   </div>
                </div>
-               {/* 新增：權威機構目標價看板 */}
                <div className="bg-slate-950 p-5 rounded-3xl border border-slate-800 border-t-4 border-t-blue-500 flex justify-between items-center group hover:bg-slate-900 transition-all">
                   <div className="flex flex-col">
                      <span className="text-slate-500 text-[10px] uppercase font-black tracking-widest mb-1">Analyst Target (Avg)</span>
                      <span className="text-2xl font-mono font-black text-white group-hover:text-blue-400 transition-colors">${appData.stock.analystTarget}</span>
                   </div>
-                  <div className="bg-blue-900/20 p-2 rounded-2xl border border-blue-500/20 group-hover:border-blue-500/50 transition-all">
-                     <Target className="w-8 h-8 text-blue-400" />
-                  </div>
+                  <Target className="w-8 h-8 text-blue-400 opacity-50 group-hover:opacity-100 transition-opacity" />
                </div>
             </div>
           </div>
 
           {/* 右欄：模組三、四 */}
           <div className="lg:col-span-8 space-y-6">
-            
-            {/* 模組三：技術與籌碼共振 (專業版蠟燭圖) */}
             <div className="bg-slate-900 p-6 rounded-[2.5rem] border border-slate-800 shadow-2xl flex flex-col min-h-[550px]">
                <div className="flex justify-between items-end mb-8 border-b border-slate-800 pb-5">
                   <div>
@@ -332,35 +315,18 @@ const App = () => {
                   </div>
                </div>
 
-               {/* 調用專業圖表組件 */}
                <ProfessionalChart 
                   data={appData} 
                   activeIndicator={activeIndicator} 
                   stockTicker={currentStock}
                />
 
-               {/* 台股特化籌碼區 與 130% 斷頭警戒 */}
                {appData.tech.chipData?.isTWSE && appData.isReal && (
                 <div className="my-6 space-y-4">
                    <div className="grid grid-cols-3 gap-4 bg-blue-900/10 border border-blue-500/20 p-6 rounded-3xl shadow-xl backdrop-blur-sm">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] text-slate-500 uppercase font-black mb-1.5 tracking-tighter">外資買賣 (張)</span>
-                        <span className={`font-mono font-black text-2xl ${appData.tech.chipData.foreignInvestor >= 0 ? 'text-red-400' : 'text-green-400'}`}>
-                          {appData.tech.chipData.foreignInvestor > 0 ? '+' : ''}{appData.tech.chipData.foreignInvestor}
-                        </span>
-                      </div>
-                      <div className="flex flex-col border-x border-slate-800 px-5">
-                        <span className="text-[10px] text-slate-500 uppercase font-black mb-1.5 tracking-tighter">投信買賣 (張)</span>
-                        <span className={`font-mono font-black text-2xl ${appData.tech.chipData.investmentTrust >= 0 ? 'text-red-400' : 'text-green-400'}`}>
-                          {appData.tech.chipData.investmentTrust > 0 ? '+' : ''}{appData.tech.chipData.investmentTrust}
-                        </span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[10px] text-slate-500 uppercase font-black mb-1.5 tracking-tighter">融資維持率</span>
-                        <span className={`font-mono font-black text-2xl ${appData.tech.marginRate < 130 ? 'text-red-500' : 'text-white'}`}>
-                          {appData.tech.marginRate}%
-                        </span>
-                      </div>
+                      <div className="flex flex-col"><span className="text-[10px] text-slate-500 uppercase font-black mb-1.5 tracking-tighter">外資買賣 (張)</span><span className={`font-mono font-black text-2xl ${appData.tech.chipData.foreignInvestor >= 0 ? 'text-red-400' : 'text-green-400'}`}>{appData.tech.chipData.foreignInvestor > 0 ? '+' : ''}{appData.tech.chipData.foreignInvestor}</span></div>
+                      <div className="flex flex-col border-x border-slate-800 px-5"><span className="text-[10px] text-slate-500 uppercase font-black mb-1.5 tracking-tighter">投信買賣 (張)</span><span className={`font-mono font-black text-2xl ${appData.tech.chipData.investmentTrust >= 0 ? 'text-red-400' : 'text-green-400'}`}>{appData.tech.chipData.investmentTrust > 0 ? '+' : ''}{appData.tech.chipData.investmentTrust}</span></div>
+                      <div className="flex flex-col"><span className="text-[10px] text-slate-500 uppercase font-black mb-1.5 tracking-tighter">融資維持率</span><span className={`font-mono font-black text-2xl ${appData.tech.marginRate < 130 ? 'text-red-500' : 'text-white'}`}>{appData.tech.marginRate}%</span></div>
                    </div>
                    {appData.tech.marginRate < 130 && (
                      <div className="bg-red-950/40 border border-red-500/50 p-5 rounded-3xl flex items-center animate-pulse shadow-red-900/20">
@@ -378,9 +344,8 @@ const App = () => {
                </div>
             </div>
 
-            {/* 模組四：AI 戰略圖卡 (含定期定額) */}
             <div className="bg-slate-900 p-6 rounded-[2.5rem] border border-slate-800 shadow-2xl">
-               <h3 className="text-white font-bold mb-6 flex items-center text-sm uppercase tracking-widest"><Zap className="w-5 h-5 mr-3 text-yellow-500"/> 模組四：AI 量化戰略圖卡</h3>
+               <h3 className="text-white font-bold mb-6 flex items-center text-base uppercase tracking-widest"><Zap className="w-5 h-5 mr-3 text-yellow-500"/> 模組四：AI 量化戰略圖卡</h3>
                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   <div onClick={async()=>{
                       setIsDeepDiving(true);
@@ -415,7 +380,6 @@ const App = () => {
                     <p className="text-[10px] text-slate-500 leading-relaxed font-medium">微笑曲線長期扣款評估與產業週期分析...</p>
                   </div>
 
-                  {/* 當沖高風險紅標卡片 */}
                   <div onClick={()=>setSelectedStrategy({title: '當沖交易警告', details: '根據量化引擎試算，目前市場期望值為負。戰術要求：收盤絕對不留倉，嚴控資金。'})} className="md:col-span-2 lg:col-span-3 bg-red-950/20 border border-red-900/40 p-5 rounded-[2rem] flex items-center hover:bg-red-900/30 transition-all cursor-pointer group shadow-lg">
                      <AlertTriangle className="w-10 h-10 text-red-500 mr-5 group-hover:scale-110 transition-all" />
                      <div className="flex-1">
@@ -454,7 +418,6 @@ const App = () => {
         </div>
       )}
 
-      {/* 全域 CSS 微調 */}
       <style dangerouslySetInnerHTML={{ __html: `
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -465,11 +428,11 @@ const App = () => {
   );
 };
 
-// --- 正式掛載入口 ---
-const rootElement = document.getElementById('root');
-if (rootElement) {
-  const root = createRoot(rootElement);
+export default App;
+
+// --- 安全初始化入口 ---
+const container = document.getElementById('root');
+if (container) {
+  const root = ReactDOM.createRoot(container);
   root.render(<App />);
 }
-
-export default App;
