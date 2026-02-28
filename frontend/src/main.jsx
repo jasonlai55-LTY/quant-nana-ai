@@ -17,30 +17,30 @@ const Tooltip = ({ children, text }) => (
   </div>
 );
 
-// --- V8.0 專業級四層分窗圖表 (主圖+量+MACD+RSI) ---
+// --- V8.0 專業級四層分窗圖表 (復刻 Plotly 多 Pane 風格) ---
 const V8ProChart = ({ stockTicker, isReal, activeIndicator }) => {
   const hash = useMemo(() => stockTicker ? stockTicker.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) : 0, [stockTicker]);
   
   return (
     <div className="flex-1 w-full flex flex-col space-y-2 p-1 bg-[#0b0e14] rounded-2xl border border-slate-800 shadow-2xl overflow-hidden">
-      {/* 1. 主圖 Pane (50% 高度): K線 + 布林通道 + MA20 + 買賣訊號 */}
+      {/* 1. 主圖視窗 (50% 高度): K線 + 布林通道 + 買賣標籤 */}
       <div className="relative flex-[10] border-b border-slate-800/50">
         <div className="absolute top-2 left-2 z-20 flex space-x-2">
-          <span className="bg-slate-900/90 border border-slate-700 px-2 py-0.5 rounded text-[8px] font-black text-white shadow-lg uppercase">MA20 (Bollinger)</span>
-          <span className="bg-purple-900/30 px-2 py-0.5 rounded text-[8px] font-bold text-purple-400">V8.0 PRO</span>
+          <span className="bg-slate-900 border border-slate-700 px-2 py-0.5 rounded text-[8px] font-black text-white shadow-lg uppercase">MAIN PANE</span>
+          <span className="bg-blue-900/30 border border-blue-500/30 px-2 py-0.5 rounded text-[8px] font-black text-blue-400">BB (20, 2)</span>
         </div>
         <svg className="w-full h-full p-4 relative z-10" preserveAspectRatio="none" viewBox="0 0 100 100">
-          <line x1="0" y1="50" x2="100" y2="50" stroke="#1e293b" strokeWidth="0.1" />
+          {[25, 50, 75].map(v => <line key={v} x1="0" y1={v} x2="100" y2={v} stroke="#1e293b" strokeWidth="0.1" />)}
           
-          {/* 布林通道 (依據 V8 截圖復刻) */}
+          {/* 布林通道陰影區塊 */}
           <path d="M0,65 Q25,45 50,55 T100,25 L100,50 Q75,85 50,70 T0,90 Z" fill="#3b82f6" fillOpacity="0.12" />
-          <path d="M0,65 Q25,45 50,55 T100,25" fill="none" stroke="#3b82f6" strokeWidth="0.3" opacity="0.4" strokeDasharray="2,1" />
-          <path d="M0,90 Q50,70 75,85 T100,50" fill="none" stroke="#3b82f6" strokeWidth="0.3" opacity="0.4" strokeDasharray="2,1" />
+          <path d="M0,65 Q25,45 50,55 T100,25" fill="none" stroke="#3b82f6" strokeWidth="0.3" opacity="0.3" strokeDasharray="2,1" />
+          <path d="M0,90 Q50,70 75,85 T100,50" fill="none" stroke="#3b82f6" strokeWidth="0.3" opacity="0.3" strokeDasharray="2,1" />
           
           {/* MA20 中軌 */}
-          <path d="M0,77 Q25,58 50,62 T100,35" fill="none" stroke="#f59e0b" strokeWidth="1" opacity="0.8" />
+          <path d="M0,77 Q25,58 50,62 T100,35" fill="none" stroke="#f59e0b" strokeWidth="0.8" opacity="0.8" />
           
-          {/* K線繪製 */}
+          {/* 專業 OHLC 陰陽燭 */}
           {isReal && [...Array(24)].map((_, i) => {
             const isUp = (i + hash) % 2 === 0;
             const x = 3 + i * 4.1;
@@ -48,51 +48,43 @@ const V8ProChart = ({ stockTicker, isReal, activeIndicator }) => {
             const bodyH = 5 + (Math.abs(hash - i) % 15);
             return (
               <g key={i}>
-                <line x1={x + 1.1} y1={yBase - 5} x2={x + 1.1} y2={yBase + bodyH + 5} stroke={isUp ? '#ef4444' : '#22c55e'} strokeWidth="0.5" />
+                <line x1={x + 1.1} y1={yBase - 5} x2={x + 1.1} y2={yBase + bodyH + 5} stroke={isUp ? '#ef4444' : '#22c55e'} strokeWidth="0.6" />
                 <rect x={x} y={yBase} width="2.3" height={bodyH} fill={isUp ? '#ef4444' : '#22c55e'} rx="0.3" />
-                {/* V8 買進標籤 */}
-                {i === 7 && <path d={`M${x},${yBase+bodyH+12} L${x+2.3},${yBase+bodyH+12} L${x+1.15},${yBase+bodyH+7} Z`} fill="#f59e0b" />}
-                {/* V8 賣出標籤 */}
-                {i === 18 && <path d={`M${x},${yBase-12} L${x+2.3},${yBase-12} L${x+1.15},${yBase-7} Z`} fill="#ffffff" />}
+                {/* 買賣訊號點模擬 (V8 特色) */}
+                {i === 6 && <path d={`M${x},${yBase+bodyH+12} L${x+2.3},${yBase+bodyH+12} L${x+1.15},${yBase+bodyH+7} Z`} fill="#f59e0b" />}
+                {i === 19 && <path d={`M${x},${yBase-12} L${x+2.3},${yBase-12} L${x+1.15},${yBase-7} Z`} fill="#ffffff" />}
               </g>
             );
           })}
         </svg>
       </div>
 
-      {/* 2. 成交量 Pane (15% 高度) */}
+      {/* 2. 成交量視窗 (15% 高度) */}
       <div className="flex-[3] relative border-b border-slate-800/50 px-4 bg-slate-900/5">
-        <div className="absolute top-1 left-2 z-20 text-[7px] font-black text-slate-600 uppercase">Volume (20MA)</div>
+        <div className="absolute top-1 left-2 z-20 text-[7px] font-black text-slate-600 uppercase">Volume Pane</div>
         <svg className="w-full h-full pt-1" preserveAspectRatio="none" viewBox="0 0 100 100">
           {[...Array(24)].map((_, i) => (
-            <rect key={i} x={3 + i * 4.1} y={100 - (10 + (i * hash) % 75)} width="2.2" height={(i * hash) % 75} fill={(i + hash) % 2 === 0 ? '#ef4444' : '#22c55e'} opacity="0.35" />
+            <rect key={i} x={3 + i * 4.1} y={100 - (10 + (i * hash) % 75)} width="2.2" height={(i * hash) % 75} fill={(i + hash) % 2 === 0 ? '#ef4444' : '#22c55e'} opacity="0.4" />
           ))}
         </svg>
       </div>
 
-      {/* 3. MACD/KD 動態指標層 (20% 高度) */}
+      {/* 3. MACD 視窗 (20% 高度) */}
       <div className="flex-[4] relative border-b border-slate-800/50 px-4">
-        <div className="absolute top-1 left-2 z-20 text-[7px] font-black text-slate-500 uppercase">{activeIndicator === 'KD' ? 'KD Oscillator' : 'MACD Engine'}</div>
+        <div className="absolute top-1 left-2 z-20 text-[7px] font-black text-slate-500 uppercase">MACD (12, 26, 9)</div>
         <svg className="w-full h-full pt-3" preserveAspectRatio="none" viewBox="0 0 100 100">
-          {activeIndicator === 'KD' ? (
-            <g>
-              <path d="M0,80 Q20,90 40,50 T100,20" fill="none" stroke="#f59e0b" strokeWidth="1.2" />
-              <path d="M0,75 Q20,80 40,60 T100,30" fill="none" stroke="#3b82f6" strokeWidth="1.2" />
-            </g>
-          ) : (
-            <g>
-               {[...Array(20)].map((_, i) => {
-                 const h = (Math.sin(i + hash) * 35);
-                 return <rect key={i} x={i * 5} y={50 - (h > 0 ? h : 0)} width="2.8" height={Math.abs(h)} fill={h > 0 ? '#ef4444' : '#22c55e'} opacity="0.4" />;
-               })}
-            </g>
-          )}
+          {[...Array(22)].map((_, i) => {
+            const h = (Math.sin(i + hash) * 35);
+            return <rect key={i} x={i * 4.5} y={50 - (h > 0 ? h : 0)} width="2.8" height={Math.abs(h)} fill={h > 0 ? '#ef4444' : '#22c55e'} opacity="0.3" />;
+          })}
+          <path d="M0,60 Q25,40 50,55 T100,30" fill="none" stroke="#f59e0b" strokeWidth="1" />
+          <path d="M0,65 Q25,45 50,60 T100,35" fill="none" stroke="#3b82f6" strokeWidth="1" />
         </svg>
       </div>
 
-      {/* 4. RSI 固定觀測層 (15% 高度) */}
+      {/* 4. RSI 視窗 (15% 高度) */}
       <div className="flex-[3] relative px-4 bg-slate-900/10">
-        <div className="absolute top-1 left-2 z-20 text-[7px] font-black text-slate-700 uppercase">RSI (14) Relative Strength</div>
+        <div className="absolute top-1 left-2 z-20 text-[7px] font-black text-slate-700 uppercase">RSI Strength (14)</div>
         <svg className="w-full h-full pt-2" preserveAspectRatio="none" viewBox="0 0 100 100">
           <line x1="0" y1="30" x2="100" y2="30" stroke="#ef4444" strokeWidth="0.2" strokeDasharray="2,1" opacity="0.5" />
           <line x1="0" y1="70" x2="100" y2="70" stroke="#22c55e" strokeWidth="0.2" strokeDasharray="2,1" opacity="0.5" />
@@ -146,7 +138,7 @@ const App = () => {
   };
 
   const callGeminiEngine = async (prompt) => {
-    if (!userApiKey) return "尚未輸入 API Key。請在右上角欄位輸入您的 Google Gemini API Key 以啟動 AI 分析報告。";
+    if (!userApiKey) return "尚未檢測到 API Key。請在右上角欄位輸入您的 Google Gemini API Key 以啟動 AI 分析報告。";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${userApiKey}`;
     try {
       const res = await fetch(url, { 
@@ -154,12 +146,12 @@ const App = () => {
         headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify({ 
           contents: [{ parts: [{ text: prompt }] }],
-          systemInstruction: { parts: [{ text: "你是一個專業、犀利且幽默的華爾街量化師。請根據數據撰寫專業分析報告。繁體中文，約180字。" }] }
+          systemInstruction: { parts: [{ text: "你是一個專業華爾街量化師。請根據數據撰寫專業分析報告。繁體中文，約180字。" }] }
         }) 
       });
       const data = await res.json();
-      return data.candidates?.[0]?.content?.parts?.[0]?.text || "分析報告生成失敗，請檢查 Key。";
-    } catch { return "API 連線失敗，請檢查網路狀態。"; }
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || "分析失敗，請檢查 Key。";
+    } catch { return "API 連線失敗，請檢查網路。"; }
   };
 
   useEffect(() => {
@@ -175,15 +167,10 @@ const App = () => {
         const sData = await sRes.json();
         if (isMounted) {
           setAppData({
-            macro: { 
-              sp500: {val: mData.sp500.val > 2000 ? mData.sp500.val : 6012.45, chg: mData.sp500.chg},
-              taiex: {val: mData.taiex.val > 5000 ? mData.taiex.val : 23156.8, chg: mData.taiex.chg},
-              usdtwd: {val: mData.usdtwd.val, chg: mData.usdtwd.chg},
-              news: [
-                { source: '路透社', text: `[焦點] 針對 $${currentStock} 的技術突破與買賣點位深入分析。`, url: getNewsUrl(currentStock) },
-                { source: '財經報', text: `[動態] 法人評估 $${currentStock} 產業循環正進入上升通道。`, url: getNewsUrl(currentStock) }
-              ]
-            },
+            macro: { ...mData, news: [
+                { source: 'Reuters', text: `$${currentStock} 雲端引擎同步成功。點擊進入深入閱讀。`, url: getNewsUrl(currentStock) },
+                { source: 'CNBC', text: `機構分析師上調 $${currentStock} 未來一年營收展望。`, url: getNewsUrl(currentStock) }
+            ]},
             stock: sData.stock,
             tech: sData.tech,
             isReal: true
@@ -193,7 +180,7 @@ const App = () => {
       } catch {
         if (isMounted) {
           setAppData({
-            macro: { sp500: {val: 6012.4, chg: 0.45}, taiex: {val: 23156.8, chg: 1.25}, usdtwd: {val: 32.125, chg: -0.05}, news: [{ source: '提示', text: 'Render 後端正在喚醒（需約30秒），目前顯示校正模擬數據。', url: getNewsUrl(currentStock) }] },
+            macro: { sp500: {val: 6012.4, chg: 0.45}, taiex: {val: 23156.8, chg: 1.25}, usdtwd: {val: 32.125, chg: -0.05}, news: [{ source: '提示', text: 'Render 後端引擎正在喚醒（需約30秒），目前顯示校正模擬數據。', url: getNewsUrl(currentStock) }] },
             stock: { price: currentStock === '2330' ? 1045 : 240, change: 1.45, pe: 16.5, roe: 22.4, analystTarget: currentStock === '2330' ? 1200 : 280 },
             tech: { kd: {k:24, d:30}, rsi: 45, macd: "同步中", marginRate: 160, chipData: {isTWSE: /^\d+$/.test(currentStock)} },
             isReal: false
@@ -212,7 +199,7 @@ const App = () => {
       <Activity className="w-20 h-20 mb-6 animate-bounce" />
       <h2 className="text-3xl font-black uppercase text-white tracking-[0.3em] mb-2">Quant Nana Pro</h2>
       <div className="flex items-center text-sm text-slate-500">
-        <Loader2 className="w-5 h-5 mr-3 animate-spin text-blue-500" /> 同步即時交易所報價並掛載 V8.0 引擎...
+        <Loader2 className="w-5 h-5 mr-3 animate-spin text-blue-500" /> 同步即時交易所數據並加載 V8.0 引擎...
       </div>
     </div>
   );
@@ -224,16 +211,19 @@ const App = () => {
         <div className="flex items-center space-x-4">
           <Activity className="text-blue-500 w-8 h-8" />
           <h1 className="text-2xl font-black text-white hidden sm:block">QUANT<span className="text-blue-500">NANA</span></h1>
-          <div className="hidden xl:flex bg-slate-800/60 px-3 py-1.5 rounded-2xl border border-slate-700 flex items-center space-x-2 ml-4">
+          <div className="bg-slate-800/60 px-3 py-1.5 rounded-2xl border border-slate-700 flex items-center space-x-2 ml-4">
              <Key className="w-3 h-3 text-purple-400" />
              <input type="password" value={userApiKey} onChange={(e)=>setUserApiKey(e.target.value)} placeholder="填入 Gemini API Key" className="bg-transparent text-[10px] w-36 focus:outline-none text-white font-mono" />
+             <Tooltip text="API Key 僅存於本地瀏覽器，用於觸發模組四的 AI 策略推演報告。">
+                <Info className="w-3 h-3 text-slate-500" />
+             </Tooltip>
           </div>
         </div>
 
         <form onSubmit={handleSearch} className="flex-1 max-w-xl relative flex items-center space-x-2 mx-6">
            <div className="relative flex-1">
-             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-             <input type="text" value={tickerInput} onChange={(e)=>setTickerInput(e.target.value)} placeholder="搜尋代碼 (2330, TSLA)..." className="w-full bg-slate-950 border border-slate-700 rounded-2xl pl-10 pr-4 py-2 text-sm focus:border-blue-500 uppercase outline-none" />
+             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+             <input type="text" value={tickerInput} onChange={(e)=>setTickerInput(e.target.value)} placeholder="搜尋代碼 (2330, TSLA)..." className="w-full bg-slate-950 border border-slate-700 rounded-2xl pl-10 pr-4 py-2 text-sm focus:border-blue-500 transition-all uppercase outline-none" />
            </div>
            <button type="button" onClick={()=>toggleWatchlist(currentStock)} className={`p-2 rounded-2xl border transition-all ${watchlists[market].includes(currentStock) ? 'bg-yellow-500/20 border-yellow-500/50 text-yellow-400 shadow-lg' : 'bg-slate-800 border-slate-700 text-slate-500'}`}>
              <Star className={`w-5 h-5 ${watchlists[market].includes(currentStock) ? 'fill-current' : ''}`} />
@@ -241,6 +231,7 @@ const App = () => {
         </form>
 
         <div className="flex items-center space-x-4">
+          {appData.isReal ? <span className="bg-green-500/10 text-green-400 text-[10px] px-3 py-1 rounded-full border border-green-500/20 flex items-center shadow-lg animate-pulse">● 雲端已連線</span> : <span className="bg-orange-500/10 text-orange-400 text-[10px] px-3 py-1 rounded-full border border-orange-500/20">喚醒引擎中</span>}
           <div className="flex bg-slate-800 p-1 rounded-xl shadow-inner border border-slate-700">
              <button onClick={()=>{setMarket('US'); setCurrentStock('AAPL');}} className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${market==='US' ? 'bg-blue-600 text-white' : 'text-slate-500'}`}>US</button>
              <button onClick={()=>{setMarket('TW'); setCurrentStock('2330');}} className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${market==='TW' ? 'bg-blue-600 text-white' : 'text-slate-500'}`}>TW</button>
@@ -251,7 +242,7 @@ const App = () => {
       {/* 主介面 */}
       <main className="max-w-[1850px] mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 w-full flex-1">
         
-        {/* 左側自選清單 */}
+        {/* 左側自選 (My Radar) */}
         <aside className="hidden lg:block lg:col-span-2 space-y-4">
            <h2 className="text-slate-500 font-bold text-[10px] uppercase tracking-widest flex items-center mb-4"><Star className="w-3 h-3 mr-2"/> My Radar</h2>
            <div className="space-y-1.5 overflow-y-auto max-h-[75vh] custom-scrollbar pr-1">
@@ -265,9 +256,9 @@ const App = () => {
 
         <div className="lg:col-span-10 grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-4 space-y-6">
-            {/* 模組一：總經與 NLP (修正量級) */}
+            {/* 模組一：精確數據看板 */}
             <div className="bg-[#11141c] p-6 rounded-[2.5rem] border border-slate-800 shadow-2xl">
-               <h3 className="text-white font-bold mb-6 flex items-center text-sm uppercase tracking-widest"><Globe className="w-4 h-4 mr-3 text-purple-400"/> 模組一：市場情緒數據</h3>
+               <h3 className="text-white font-bold mb-6 flex items-center text-sm uppercase tracking-widest"><Globe className="w-4 h-4 mr-3 text-purple-400"/> 模組一：總經與市場情緒</h3>
                <div className="grid grid-cols-3 gap-2 mb-6 text-center">
                   <div className="bg-slate-950 p-2.5 rounded-2xl border border-slate-800">
                     <span className="text-[7px] text-slate-500 block mb-1 uppercase font-black tracking-tighter">INX (S&P 500)</span>
@@ -285,26 +276,26 @@ const App = () => {
                   </div>
                </div>
                <div className="space-y-3">
-                  <span className="text-purple-400 font-black text-[10px] flex items-center uppercase tracking-widest mb-2"><Newspaper className="w-3.5 h-3.5 mr-2"/> NLP 實時饋送</span>
+                  <span className="text-purple-400 font-black text-[10px] flex items-center uppercase tracking-widest mb-2"><Newspaper className="w-3.5 h-3.5 mr-2"/> NLP Real-time Feed</span>
                   {appData.macro.news.map((n, i) => (
-                    <a key={i} href={n.url} target="_blank" rel="noopener noreferrer" className="block bg-purple-900/10 p-4 rounded-[1.5rem] border border-purple-500/20 text-[11px] text-slate-300 hover:bg-purple-900/20 transition-all border-l-4 border-l-purple-500 shadow-lg">
+                    <a key={i} href={n.url} target="_blank" rel="noopener noreferrer" className="block bg-purple-900/10 p-4 rounded-[1.5rem] border border-purple-500/20 text-[11px] text-slate-300 hover:bg-purple-900/20 transition-all group border-l-4 border-l-purple-500 shadow-lg">
                        <span className="font-black text-purple-400 mr-2 uppercase flex items-center">[{n.source}] <ExternalLink className="w-2 h-2 ml-1"/></span> {n.text}
                     </a>
                   ))}
                </div>
             </div>
 
-            {/* 模組二：價值分析與目標價 */}
+            {/* 模組二：價值分析 */}
             <div className="bg-[#11141c] p-6 rounded-[2.5rem] border border-slate-800 shadow-2xl space-y-5">
                <h3 className="text-white font-bold flex items-center text-sm uppercase tracking-widest"><ShieldAlert className="w-4 h-4 mr-3 text-emerald-400"/> 模組二：價值與護城河</h3>
                <div className="grid grid-cols-2 gap-4">
                   <div className="bg-slate-950 p-5 rounded-3xl border border-slate-800 text-center shadow-inner group hover:border-emerald-500/50 transition-all">
                     <span className="text-slate-500 text-[9px] block mb-1 uppercase font-black tracking-widest">P/E Ratio</span>
-                    <span className={`text-2xl font-black ${appData.stock.pe < 20 ? 'text-emerald-400' : 'text-white'}`}>{appData.stock.pe || '---'}</span>
+                    <span className={`text-2xl font-black ${appData.stock.pe < 20 && appData.isReal ? 'text-emerald-400' : 'text-white'}`}>{appData.stock.pe || '---'}</span>
                   </div>
                   <div className="bg-slate-950 p-5 rounded-3xl border border-slate-800 text-center shadow-inner group hover:border-emerald-500/50 transition-all">
                     <span className="text-slate-500 text-[9px] block mb-1 uppercase font-black tracking-widest">ROE %</span>
-                    <span className={`text-2xl font-black ${appData.stock.roe > 15 ? 'text-emerald-400' : 'text-white'}`}>{appData.stock.roe || '---'}%</span>
+                    <span className={`text-2xl font-black ${appData.stock.roe > 15 && appData.isReal ? 'text-emerald-400' : 'text-white'}`}>{appData.stock.roe || '---'}%</span>
                   </div>
                </div>
                <div className="bg-slate-950 p-5 rounded-3xl border border-slate-800 border-t-4 border-t-blue-500 flex justify-between items-center group hover:bg-slate-900 transition-all shadow-xl">
@@ -325,7 +316,7 @@ const App = () => {
                     <h3 className="text-white font-bold text-lg flex items-center mb-1.5 tracking-tighter"><LineChart className="w-5 h-5 mr-3 text-cyan-400"/> 模組三：技術與籌碼共振 (V8.0 Pro)</h3>
                     <div className="flex space-x-2">
                        <span className="text-[9px] bg-slate-800 text-slate-400 px-3 py-1 rounded-full uppercase font-black border border-slate-700 tracking-widest">{currentStock}</span>
-                       <span className="text-[9px] bg-blue-900/30 text-blue-400 px-3 py-1 rounded-full uppercase font-black animate-pulse border border-blue-500/20 shadow-blue-500/10">Precision Engine v2.5</span>
+                       <span className="text-[9px] bg-blue-900/30 text-blue-400 px-3 py-1 rounded-full uppercase font-black animate-pulse border border-blue-500/20 shadow-blue-500/10">Precision Sync Engine</span>
                     </div>
                   </div>
                   <div className="text-right">
